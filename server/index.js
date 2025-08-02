@@ -1,5 +1,3 @@
-// server.js or index.js
-
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -26,7 +24,6 @@ const io = new Server(server, {
   },
 });
 
-// Middleware
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(
@@ -39,14 +36,12 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/docs", documentRoutes);
 app.use("/api/user", userRoutes);
 
-// In-memory user tracking
-const documentUsers = {}; // docId -> Set of usernames
-const socketToUser = {};  // socket.id -> { username, docId }
+const documentUsers = {};
+const socketToUser = {};
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);

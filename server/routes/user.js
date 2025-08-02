@@ -5,7 +5,6 @@ import { jwtAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Route 1: Get user profile (public view for others, full for self)
 router.get("/:username", jwtAuth, async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select("-password -__v");
@@ -29,7 +28,6 @@ router.get("/:username", jwtAuth, async (req, res) => {
   }
 });
 
-// Route 2: Get documents owned by the user (public)
 router.get("/:username/owned-docs", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select("_id");
@@ -43,7 +41,6 @@ router.get("/:username/owned-docs", async (req, res) => {
   }
 });
 
-// Route 3: Get documents shared to the user (public)
 router.get("/:username/shared-docs", async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select("_id");
@@ -55,7 +52,7 @@ router.get("/:username/shared-docs", async (req, res) => {
       },
       owner: { $ne: user._id }
     })
-      .select("title owner") // _id is included by default
+      .select("title owner") 
       .populate("owner", "username");
 
     const formattedDocs = docs.map(doc => ({

@@ -6,7 +6,6 @@ import passport from "passport";
 
 const router = express.Router();
 
-// Local Register
 router.post("/register", async (req, res) => {
   try {
     const { fullName, email, username, password } = req.body;
@@ -21,7 +20,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Local Login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -38,8 +36,6 @@ router.post("/login", async (req, res) => {
   res.json({ token, username: user.username });
 });
 
-
-// Google Auth
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 router.get("/google/callback", passport.authenticate("google", {

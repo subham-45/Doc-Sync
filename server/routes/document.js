@@ -5,7 +5,6 @@ import { jwtAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Create new document
 router.post("/", jwtAuth, async (req, res) => {
   try {
     const doc = new Document({
@@ -29,7 +28,6 @@ router.get("/:docId", jwtAuth, async (req, res) => {
       return res.status(404).json({ error: "Document not found" });
     }
 
-    // Check if the requesting user is the owner or a collaborator
     const isOwner = doc.owner._id.equals(req.user._id);
     const isCollaborator = doc.collaborators.some(
       collaborator => collaborator._id.equals(req.user._id)
@@ -45,7 +43,6 @@ router.get("/:docId", jwtAuth, async (req, res) => {
   }
 });
 
-// Update document content (any logged-in user with the link)
 router.put("/:docId", jwtAuth, async (req, res) => {
   try {
     const doc = await Document.findByIdAndUpdate(
@@ -60,7 +57,6 @@ router.put("/:docId", jwtAuth, async (req, res) => {
   }
 });
 
-// Add collaborator to a document
 router.post("/:docId/collab", jwtAuth, async (req, res) => {
   const  username  = req.body.username;
   const { docId } = req.params;
@@ -76,7 +72,6 @@ router.post("/:docId/collab", jwtAuth, async (req, res) => {
       return res.status(403).json({ error: "Only the owner can modify collaborators" });
     }
 
-    // Check if already a collaborator
     const alreadyExists = doc.collaborators.some(c =>
       c._id.equals(userToAdd._id)
     );
@@ -97,8 +92,6 @@ router.post("/:docId/collab", jwtAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Remove collaborator from a document
 router.delete("/:docId/collab", jwtAuth, async (req, res) => {
   const { username } = req.body;
   const { docId } = req.params;

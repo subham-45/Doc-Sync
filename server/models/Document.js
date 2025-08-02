@@ -17,11 +17,10 @@ const DocumentSchema = new mongoose.Schema(
     updatedAt: { type: Date, default: Date.now }
   },
   {
-    timestamps: false // we manage createdAt and updatedAt manually
+    timestamps: false 
   }
 );
 
-// Update `updatedAt` only when `content` is modified
 DocumentSchema.pre("save", function (next) {
   if (this.isModified("content")) {
     this.updatedAt = Date.now();
