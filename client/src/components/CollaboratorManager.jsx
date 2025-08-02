@@ -5,14 +5,15 @@ export default function CollaboratorManager({ docId, collaborators, socket }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  // const apiUrl = process.env.REACT_APP_API_URL;
   const addCollaborator = async () => {
     if (!email) return;
+    const apiUrl = process.env.REACT_APP_API_URL;
     setLoading(true);
     setError("");
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/docs/${docId}/collaborators`,
+        `${apiUrl}/api/docs/${docId}/collaborators`,
         { email },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -26,9 +27,10 @@ export default function CollaboratorManager({ docId, collaborators, socket }) {
   };
 
   const removeCollaborator = async (userId) => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     try {
       await axios.delete(
-        `http://localhost:5000/api/docs/${docId}/collaborators/${userId}`,
+        `${apiUrl}/api/docs/${docId}/collaborators/${userId}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       socket.emit("updateCollaborators", docId);

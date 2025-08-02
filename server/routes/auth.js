@@ -47,7 +47,7 @@ router.get("/google/callback", passport.authenticate("google", {
   failureRedirect: "/login",
 }), (req, res) => {
   const token = generateToken(req.user);
-  res.redirect(`http://localhost:5173/google-auth?token=${token}&username=${req.user.username}`);
+  res.redirect(`${process.env.CLIENT_URL}/google-auth?token=${token}&username=${req.user.username}`);
 });
 
 export default router;

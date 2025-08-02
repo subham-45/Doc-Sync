@@ -3,11 +3,11 @@ import axios from "axios";
 
 export default function ProfileSection({ profile, setDocuments, isCurrentUser }) {
   const [newDocTitle, setNewDocTitle] = useState("");
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   const createDoc = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/docs",
+        `${apiUrl}/api/docs`,
         { title: newDocTitle || "Untitled Document" },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );

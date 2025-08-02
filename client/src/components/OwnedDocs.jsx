@@ -5,10 +5,10 @@ import axios from "axios";
 export default function OwnedDocs({ documents, isOwner, username }) {
   const [docsState, setDocsState] = useState(documents);
   const [dropdownOpen, setDropdownOpen] = useState(null);
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   const handleRemove = async (docId, collaboratorUsername) => {
     try {
-      await axios.delete(`http://localhost:5000/api/docs/${docId}/collab`, {
+      await axios.delete(`${apiUrl}/api/docs/${docId}/collab`, {
         data: { username: collaboratorUsername },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -37,7 +37,7 @@ export default function OwnedDocs({ documents, isOwner, username }) {
 
     axios
       .post(
-        `http://localhost:5000/api/docs/${docId}/collab`,
+        `${apiUrl}/api/docs/${docId}/collab`,
         { username },
         {
           headers: {

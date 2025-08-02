@@ -7,12 +7,12 @@ function Login({ setIsAuth }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      const res = await axios.post(`${apiUrl}/api/auth/login`, form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
       setIsAuth(true);
@@ -106,7 +106,7 @@ function Login({ setIsAuth }) {
 
           <div className="mt-6 grid grid-cols-1 gap-4">
             <a
-              href="http://localhost:5000/api/auth/google"
+              href={`${apiUrl}/api/auth/google`}
               className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">

@@ -29,11 +29,11 @@ function DocEditor() {
   const [editingUsers, setEditingUsers] = useState({});
   const quillRef = useRef(null);
   const socketRef = useRef(null);
-
   useEffect(() => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const fetchTitle = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/docs/${docId}`, {
+        const res = await axios.get(`${apiUrl}/api/docs/${docId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -48,7 +48,8 @@ function DocEditor() {
 
   // 1. Connect to socket server
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const socket = io(`${apiUrl}`);
     socketRef.current = socket;
     return () => socket.disconnect();
   }, []);

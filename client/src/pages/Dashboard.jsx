@@ -13,18 +13,19 @@ function Dashboard() {
   const [sharedDocs, setSharedDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const isCurrentUser = localStorage.getItem("username") === username;
-
+  // const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     const fetchData = async () => {
+      const apiUrl = process.env.REACT_APP_API_URL;
       try {
         const token = localStorage.getItem("token");
 
         const [profileRes, ownedRes, sharedRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/user/${username}`, {
+          axios.get(`${apiUrl}/api/user/${username}`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get(`http://localhost:5000/api/user/${username}/owned-docs`),
-          axios.get(`http://localhost:5000/api/user/${username}/shared-docs`),
+          axios.get(`${apiUrl}/api/user/${username}/owned-docs`),
+          axios.get(`${apiUrl}/api/user/${username}/shared-docs`),
         ]);
 
         setProfile(profileRes.data);
