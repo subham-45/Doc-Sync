@@ -44,22 +44,29 @@ const documentUsers = {};
 const socketToUser = {};
 
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
+  socket.on('collaborator-added', (data) => {
+    io.emit('document-shared', data);
+    }
+  );
+  socket.on('collaborator-removed', (data) => {
+    io.emit('document-unshared', data);
+  });
+  socket.on('document-deleted', (docId) => {
+    io.emit('document-deleted', docId);
+  });
+  socket.on('document-created', (data) => {
+    io.emit('document-created', data);
+  });
   socket.on("joinDoc", ({ docId, username }) => {
     socket.join(docId);
     socketToUser[socket.id] = { username, docId };
-
     if (!documentUsers[docId]) documentUsers[docId] = new Set();
     documentUsers[docId].add(username);
-
     io.to(docId).emit("user-presence", Array.from(documentUsers[docId]));
   });
-
   socket.on("sendChanges", ({ docId, delta }) => {
     socket.to(docId).emit("receiveChanges", delta);
   });
-
   socket.on("get-document", async (docId) => {
     try {
       const doc = await Document.findById(docId);
@@ -68,7 +75,6 @@ io.on("connection", (socket) => {
       console.error("Error loading document:", err.message);
     }
   });
-
   socket.on("save-document", async ({ docId, data }) => {
     try {
       await Document.findByIdAndUpdate(docId, {
@@ -79,12 +85,9 @@ io.on("connection", (socket) => {
       console.error("Error saving document:", err.message);
     }
   });
-
   socket.on("user-editing", ({ docId, username }) => {
     socket.to(docId).emit("user-editing", { username });
   });
-  
-
   socket.on("disconnect", () => {
     const userInfo = socketToUser[socket.id];
     if (userInfo) {
@@ -98,7 +101,6 @@ io.on("connection", (socket) => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
-
 const PORT = process.env.PORT || 5000;
 mongoose
   .connect(process.env.MONGO_URI)

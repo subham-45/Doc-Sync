@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export default function LandingPage() {
+export default function LandingPage({isAuth}) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 pt-24 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -11,8 +11,8 @@ export default function LandingPage() {
           Seamless document collaboration made easy. Sync, edit, and share your
           documents in real time — with powerful rich text tools and secure role-based access.
         </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center sm:items-stretch">
+        {!isAuth && 
+        (<div className="flex flex-col sm:flex-row gap-4 justify-center items-center sm:items-stretch">
           <Link
             to="/login"
             className="px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
@@ -25,7 +25,7 @@ export default function LandingPage() {
           >
             Get Started
           </Link>
-        </div>
+        </div>)}
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 text-left">
           <div className="p-5 sm:p-6 bg-white rounded-xl shadow hover:shadow-lg transition">

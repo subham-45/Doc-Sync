@@ -13,7 +13,6 @@ function Dashboard() {
   const [sharedDocs, setSharedDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const isCurrentUser = localStorage.getItem("username") === username;
-  // const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     const fetchData = async () => {
       const apiUrl = process.env.REACT_APP_API_URL;
@@ -51,13 +50,17 @@ function Dashboard() {
           <ProfileSection 
             profile={profile} 
             isCurrentUser={isCurrentUser}
+            setOwnedDocs={setOwnedDocs}
           />
           <OwnedDocs 
-            documents={ownedDocs} 
+            ownedDocs={ownedDocs}
+            setOwnedDocs={setOwnedDocs}
             isOwner={isCurrentUser}
-            username={username}
           />
-          <SharedDocs documents={sharedDocs} />
+          <SharedDocs 
+            sharedDocs={sharedDocs}
+            setSharedDocs={setSharedDocs}
+          />
         </div>
       </div>
     </div>

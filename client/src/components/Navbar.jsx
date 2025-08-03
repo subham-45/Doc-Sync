@@ -68,7 +68,7 @@ export default function Navbar({ isAuth, setIsAuth }) {
       </div>
 
       {isOpen && (
-        <div className="sm:hidden fixed top-[56px] left-0 w-[40%] h-full border-r border-gray-200 shadow-lg z-20 px-4 py-6">
+        <div className="sm:hidden bg-white fixed top-[44px] left-0 w-[40%] h-full border-r border-gray-200 shadow-lg z-20 px-4 py-6">
           <div className="flex flex-col gap-4 text-blue-900 font-medium">
             <Link to="/" onClick={toggleMenu} className="hover:text-blue-600 transition-colors">
               Home

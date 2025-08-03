@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import { io } from "socket.io-client";
+import socket from "../socket";
 import axios from "axios";
 
 const SAVE_INTERVAL_MS = 2000;
@@ -28,7 +28,7 @@ function DocEditor() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [editingUsers, setEditingUsers] = useState({});
   const quillRef = useRef(null);
-  const socketRef = useRef(null);
+
   useEffect(() => {
     const apiUrl = process.env.REACT_APP_API_URL;
     const fetchTitle = async () => {
@@ -46,17 +46,8 @@ function DocEditor() {
     fetchTitle();
   }, [docId]);
 
-  // 1. Connect to socket server
+  // 1. Join room and load document
   useEffect(() => {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const socket = io(`${apiUrl}`);
-    socketRef.current = socket;
-    return () => socket.disconnect();
-  }, []);
-
-  // 2. Join room and load document
-  useEffect(() => {
-    const socket = socketRef.current;
     const quill = quillRef.current;
     if (!socket || !quill) return;
 
@@ -74,9 +65,8 @@ function DocEditor() {
     quillInstance.setText("Loading...");
   }, [docId]);
 
-  // 3. Auto-save every 2 seconds
+  // 2. Auto-save every 2 seconds
   useEffect(() => {
-    const socket = socketRef.current;
     const quill = quillRef.current;
     if (!socket || !quill) return;
 
@@ -92,9 +82,8 @@ function DocEditor() {
     return () => clearInterval(interval);
   }, [docId]);
 
-  // 4. Receive changes from others
+  // 3. Receive changes from others
   useEffect(() => {
-    const socket = socketRef.current;
     const quill = quillRef.current;
     if (!socket || !quill) return;
 
@@ -108,9 +97,8 @@ function DocEditor() {
     return () => socket.off("receiveChanges", handler);
   }, []);
 
-  // 5. Send changes made by this user
+  // 4. Send changes made by this user
   useEffect(() => {
-    const socket = socketRef.current;
     const quill = quillRef.current;
     if (!socket || !quill) return;
 
@@ -120,7 +108,10 @@ function DocEditor() {
       if (source !== "user") return;
 
       socket.emit("sendChanges", { docId, delta });
-      socket.emit("user-editing", { docId, username: localStorage.getItem("username") });
+      socket.emit("user-editing", {
+        docId,
+        username: localStorage.getItem("username"),
+      });
 
       setSaved(false);
     };
@@ -129,9 +120,8 @@ function DocEditor() {
     return () => quillInstance.off("text-change", handler);
   }, [docId]);
 
-  // 6. Presence tracking
+  // 5. Presence tracking
   useEffect(() => {
-    const socket = socketRef.current;
     const username = localStorage.getItem("username");
 
     if (!socket || !username) return;
@@ -144,9 +134,8 @@ function DocEditor() {
     return () => socket.off("user-presence", handlePresence);
   }, [docId]);
 
-  // 7. Editing indicators
+  // 6. Editing indicators
   useEffect(() => {
-    const socket = socketRef.current;
     if (!socket) return;
 
     const handler = ({ username }) => {
@@ -185,8 +174,6 @@ function DocEditor() {
           {saved ? "Saved" : "Saving..."}
         </span>
       </div>
-
-      {/* Live Users */}
       <div className="max-w-5xl mx-auto mb-2 text-sm text-blue-700">
         {onlineUsers.length > 0 && (
           <p className="text-xs text-gray-600 mb-1">Active Collaborators:</p>
@@ -205,8 +192,6 @@ function DocEditor() {
           </p>
         )}
       </div>
-
-      {/* Editor */}
       <div className="max-w-5xl mx-auto bg-white rounded shadow hide-scrollbar">
         <div className="h-[calc(100vh-220px)] overflow-y-auto">
           <ReactQuill

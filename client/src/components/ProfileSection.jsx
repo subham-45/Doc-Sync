@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
+import socket from "../socket";
 
-export default function ProfileSection({ profile, setDocuments, isCurrentUser }) {
+export default function ProfileSection({ profile,isCurrentUser,setOwnedDocs }) {
   const [newDocTitle, setNewDocTitle] = useState("");
   const apiUrl = process.env.REACT_APP_API_URL;
   const createDoc = async () => {
@@ -11,12 +12,11 @@ export default function ProfileSection({ profile, setDocuments, isCurrentUser })
         { title: newDocTitle || "Untitled Document" },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-      setDocuments(prev => ({
-        ...prev,
-        owned: [res.data, ...prev.owned]
-      }));
+      setOwnedDocs((prev)=>[res.data,...prev]);
       setNewDocTitle("");
+      socket.emit('document-created',res.data);
     } catch (err) {
+      console.log(err.message);
       alert("Failed to create document");
     }
   };

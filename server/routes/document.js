@@ -57,6 +57,25 @@ router.put("/:docId", jwtAuth, async (req, res) => {
   }
 });
 
+router.delete("/:docId", jwtAuth, async (req, res) => {
+  try {
+    const doc = await Document.findById(req.params.docId);
+
+    if (!doc) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+    if (doc.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Not authorized to delete this document" });
+    }
+
+    await doc.deleteOne();
+    res.status(200).json({ message: "Document deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete document" });
+  }
+});
+
+
 router.post("/:docId/collab", jwtAuth, async (req, res) => {
   const  username  = req.body.username;
   const { docId } = req.params;
@@ -64,7 +83,9 @@ router.post("/:docId/collab", jwtAuth, async (req, res) => {
   try {
     const userToAdd = await User.findOne({ username });
     if (!userToAdd) return res.status(404).json({ error: "User not found" });
-
+    if (userToAdd._id.toString() === req.user._id.toString()) {
+      return res.status(409).json({ error: "Cannot add yourself as collaborator" });
+    }
     const doc = await Document.findById(docId);
     if (!doc) return res.status(404).json({ error: "Document not found" });
 

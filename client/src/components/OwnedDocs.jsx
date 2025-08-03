@@ -1,74 +1,150 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
-export default function OwnedDocs({ documents, isOwner, username }) {
-  const [docsState, setDocsState] = useState(documents);
+import socket from "../socket";
+export default function OwnedDocs({ ownedDocs, setOwnedDocs, isOwner }) {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const apiUrl = process.env.REACT_APP_API_URL;
-  const handleRemove = async (docId, collaboratorUsername) => {
+  const handleRemove = async (docId, collaborator) => {
     try {
       await axios.delete(`${apiUrl}/api/docs/${docId}/collab`, {
-        data: { username: collaboratorUsername },
+        data: { username: collaborator },
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
-      setDocsState(prev =>
+      setOwnedDocs(prev =>
         prev.map(doc =>
           doc._id === docId
             ? {
                 ...doc,
                 collaborators: doc.collaborators.filter(
-                  c => c.username !== collaboratorUsername
-                )
+                  c => c.username !== collaborator
+                ),
               }
             : doc
         )
       );
+      const removedDoc = ownedDocs.find(doc => doc._id === docId);
+      const removedUser = removedDoc?.collaborators.find(c => c.username === collaborator);
+      if (removedUser) {
+        socket.emit("collaborator-removed", {
+          docId,
+          removedUser: removedUser.username,
+          owner: localStorage.getItem("username") 
+        });
+      }
     } catch (err) {
       console.error("Failed to remove collaborator", err);
     }
   };
-
   const handleAdd = (docId) => {
     const username = prompt("Enter username to add:");
     if (!username) return;
-
     axios
       .post(
         `${apiUrl}/api/docs/${docId}/collab`,
         { username },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       )
       .then(res => {
-        setDocsState(prev =>
+        const updatedDoc = ownedDocs.find(doc => doc._id === docId);
+        setOwnedDocs(prev =>
           prev.map(doc =>
             doc._id === docId
               ? { ...doc, collaborators: res.data.collaborators }
               : doc
           )
         );
+        socket.emit("collaborator-added", {
+          docId,
+          collaborators: res.data.collaborators,
+          addedUser: username,
+          title: updatedDoc?.title || "Untitled Document",
+          owner: localStorage.getItem("username"),
+        });
       })
       .catch(err => {
         alert(err.response?.data?.error || "Failed to add");
       });
   };
+  const handleDelete = async (docId) => {
+    if (!window.confirm("Are you sure you want to delete this document?")) return;
+    try {
+      await axios.delete(`${apiUrl}/api/docs/${docId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      socket.emit("document-deleted", docId);
+      setOwnedDocs(prev => prev.filter(doc => doc._id !== docId));
+    } catch (err) {
+      alert("Failed to delete document");
+      console.error(err);
+    }
+  };
+  useEffect(() => {
+    const username = localStorage.getItem("username");
+    if (!username) return;
+    socket.on("document-shared", (data)=>{
+      if(data.owner===username){
+        setOwnedDocs(prev =>
+          prev.map(doc =>
+            doc._id === data.docId
+              ? { ...doc, collaborators: data.collaborators }
+              : doc
+          )
+        );
+      }
+    });
+    socket.on("document-unshared", (data)=>{
+      if(data.owner===username){
+        setOwnedDocs(prev =>
+          prev.map(doc =>
+            doc._id === data.docId
+              ? {
+                  ...doc,
+                  collaborators: doc.collaborators.filter(
+                    c => c.username !== data.removedUser
+                  ),
+                }
+              : doc
+          )
+        );;
+      }
+    });
+    socket.on("document-deleted",(docId)=>{
+      setOwnedDocs(prev => prev.filter(doc => doc._id !== docId));
+    });
+    socket.on("document-created", (data) => {
+      setOwnedDocs((prev) => {
+        const exists = prev.some((doc) => doc._id === data._id);
+        if (exists) return prev;
+        return [...prev,data];
+      });
+    });    
+    return () => {
+      socket.off("document-shared");
+      socket.off("document-unshared");
+      socket.off("document-deleted");
+      socket.off("document-created")
+    };
+  }, [setOwnedDocs]);
   return (
     <section className="rounded-lg shadow p-4 sm:p-6 mb-6 bg-white">
       <h2 className="text-lg sm:text-xl font-semibold mb-4">
-        Your Documents ({docsState.length})
+        Your Documents ({ownedDocs.length})
       </h2>
       <div className="max-h-[60vh] overflow-y-auto pr-1 sm:pr-2">
-        {docsState.length === 0 ? (
+        {ownedDocs.length === 0 ? (
           <p className="text-gray-500">No documents yet</p>
         ) : (
           <ul className="space-y-3">
-            {docsState.map((doc) => (
+            {ownedDocs.map((doc) => (
               <li key={doc._id} className="p-3 rounded bg-gray-50">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <Link
@@ -79,6 +155,12 @@ export default function OwnedDocs({ documents, isOwner, username }) {
                   </Link>
                   {isOwner && (
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleDelete(doc._id)}
+                        className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
                       <button
                         onClick={() => handleAdd(doc._id)}
                         className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
@@ -121,6 +203,5 @@ export default function OwnedDocs({ documents, isOwner, username }) {
         )}
       </div>
     </section>
-  );
-  
+  ); 
 }
